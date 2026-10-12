@@ -103,5 +103,3 @@ xcodegen generate
 # 3. Open in Xcode
 open XyecocMail.xcodeproj
 
-
-*meow*
