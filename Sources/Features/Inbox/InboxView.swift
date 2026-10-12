@@ -93,12 +93,20 @@ final class InboxViewModel: ObservableObject {
             while !Task.isCancelled {
                 // Интервал опроса — настройка «poll_interval»; 0 = вручную.
                 let interval = Prefs.pollInterval.seconds
-                try? await Task.sleep(nanoseconds: interval > 0 ? interval * 1_000_000_000 : 5_000_000_000)
-                guard !Task.isCancelled else { return }
+                // Проактивно продлеваем сессию — сервер гасит токены быстро,
+                // а mail/default на мёртвой сессии отвечает эхой без ошибки.
+                await repo.preemptiveSessionRefresh()
                 // Poll the folder the user is actually looking at; the virtual
-                // snoozed folder has no server representation.
+                // snoozed folder has no server representation. Фетчим СРАЗУ,
+                // а не после сна: (пере)старт опроса не оставляет список
+                // устаревшим на весь интервал.
                 if interval > 0 && currentFolder != snoozedFolderId {
-                    _ = await repo.fetchMails(folder: currentFolder)
+                    let response = await repo.fetchMails(folder: currentFolder)
+                    // Молчаливые ошибки здесь — главный источник «письма нет,
+                    // пока не перелогинишься». Показываем причину на экране.
+                    if let err = response.error, isAppActive, !Task.isCancelled {
+                        showToast("Не удалось обновить: \(err)")
+                    }
                 }
                 await reload()
                 unreadBadge = await currentBadgeCount()
@@ -118,6 +126,8 @@ final class InboxViewModel: ObservableObject {
                     }
                 }
                 lastMaxId = newMaxId
+                try? await Task.sleep(nanoseconds: interval > 0 ? interval * 1_000_000_000 : 5_000_000_000)
+                guard !Task.isCancelled else { return }
             }
         }
     }
@@ -303,8 +313,9 @@ final class InboxViewModel: ObservableObject {
             mails.removeAll { $0.id == mail.id }
         }
         Task {
-            _ = await repo.performMailAction(mailId: mail.id, action: "move-to-folder",
-                                             value: .string("trash"), folder: requestFolder(for: mail))
+            let response = await repo.performMailAction(mailId: mail.id, action: "move-to-folder",
+                                                        value: .string("trash"), folder: requestFolder(for: mail))
+            if let err = response.error { showToast("Не удалось: \(err)") }
             await reload()
         }
     }
@@ -352,14 +363,16 @@ final class InboxViewModel: ObservableObject {
 
     func toggleStar(_ mail: MailItem) {
         Task {
-            _ = await repo.performMailAction(mailId: mail.id, action: "important", folder: requestFolder(for: mail))
+            let response = await repo.performMailAction(mailId: mail.id, action: "important", folder: requestFolder(for: mail))
+            if let err = response.error { showToast("Не удалось: \(err)") }
             await reload()
         }
     }
 
     func delete(_ mail: MailItem) {
         Task {
-            _ = await repo.performMailAction(mailId: mail.id, action: "delete", folder: requestFolder(for: mail))
+            let response = await repo.performMailAction(mailId: mail.id, action: "delete", folder: requestFolder(for: mail))
+            if let err = response.error { showToast("Не удалось удалить: \(err)") }
             await reload()
         }
     }
@@ -373,8 +386,9 @@ final class InboxViewModel: ObservableObject {
 
     func moveToSpam(_ mail: MailItem) {
         Task {
-            _ = await repo.performMailAction(mailId: mail.id, action: "move-to-folder",
-                                             value: .string("spam"), folder: requestFolder(for: mail))
+            let response = await repo.performMailAction(mailId: mail.id, action: "move-to-folder",
+                                                        value: .string("spam"), folder: requestFolder(for: mail))
+            if let err = response.error { showToast("Не удалось: \(err)") }
             await reload()
         }
     }

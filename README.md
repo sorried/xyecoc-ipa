@@ -4,7 +4,7 @@
 
 **A native, lightweight, and modern iOS mail client for xyecoc.com built with SwiftUI.**
 
-[English](#-about-the-project) | [Русская версия](assets/ru_readme.md) | [📚 Wiki Documentation](https://github.com/ziahka/xyecoc-ipa/wiki) | [VirusTotal](https://www.virustotal.com/gui/file/f9ad2ee044d3f26f42c33ddd5392007cd19ea12aaa54781003a21888f9a57a47?nocache=1)
+[English](#-about-the-project) | [Русская версия](assets/ru_readme.md) | [📚 Wiki Documentation](https://github.com/sorried/xyecoc-ipa/wiki) | [VirusTotal](https://www.virustotal.com/gui/file/f9ad2ee044d3f26f42c33ddd5392007cd19ea12aaa54781003a21888f9a57a47?nocache=1)
 
 ---
 
@@ -44,7 +44,7 @@ The project connects directly to the official backend endpoints (`api.xyecoc.com
 Because this application is not distributed through the App Store, it is installed via **Sideloading** (signing the `.ipa` with your personal Apple ID).
 
 ### 1. Download the Pre-built `.ipa`
-1. Navigate to the **[Actions](https://github.com/ziahka/xyecoc-ipa/actions)** tab of this repository.
+1. Navigate to the **[Actions](https://github.com/sorried/xyecoc-ipa/actions)** tab of this repository.
 2. Click on the latest workflow run marked with a **green checkmark** (✅).
 3. Scroll down to the **Artifacts** section at the bottom.
 4. Download the **`XyecocMail-unsigned`** ZIP archive and extract it on your computer to get `XyecocMail-unsigned.ipa`.
@@ -102,3 +102,6 @@ xcodegen generate
 
 # 3. Open in Xcode
 open XyecocMail.xcodeproj
+
+
+*meow*
